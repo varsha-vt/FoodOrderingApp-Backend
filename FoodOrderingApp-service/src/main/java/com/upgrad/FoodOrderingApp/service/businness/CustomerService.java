@@ -4,6 +4,7 @@ import com.upgrad.FoodOrderingApp.service.dao.CustomerDao;
 import com.upgrad.FoodOrderingApp.service.entity.CustomerAuthEntity;
 import com.upgrad.FoodOrderingApp.service.entity.CustomerEntity;
 import com.upgrad.FoodOrderingApp.service.exception.AuthenticationFailedException;
+import com.upgrad.FoodOrderingApp.service.exception.AuthorizationFailedException;
 import com.upgrad.FoodOrderingApp.service.exception.SignUpRestrictedException;
 import com.upgrad.FoodOrderingApp.service.util.FoodOrderingUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,7 +89,7 @@ public class CustomerService {
             final ZonedDateTime expiresAt = now.plusHours(8);
             customerAuthEntity.setAccessToken(jwtTokenProvider.generateToken(customer.getUuid(), now, expiresAt));
             customerAuthEntity.setLoginAt(now);
-            customerAuthEntity.setLogoutAt(expiresAt);
+            customerAuthEntity.setLogoutAt(null);
             customerAuthEntity.setExpiresAt(expiresAt);
             return customerDao.createAuthToken(customerAuthEntity);
 
@@ -97,8 +98,38 @@ public class CustomerService {
         else {
             throw new AuthenticationFailedException("ATH-002", "Invalid Credentials");
         }
+    }
 
+    @Transactional
+    public String getCustomerUUID(String authtoken) throws AuthorizationFailedException {
+        CustomerAuthEntity customerAuthEntity =  validateUserAuthentication(authtoken);
+        customerAuthEntity.setLogoutAt(ZonedDateTime.now());
+        customerDao.updateCustomerAuthEntity(customerAuthEntity);
+        CustomerEntity customer = customerAuthEntity.getCustomer();
+        return customer.getUuid();
+    }
 
+    //Common method that will be used by all endpoints to validate the accessToken
+    public CustomerAuthEntity validateUserAuthentication(String authtoken) throws AuthorizationFailedException {
+        String[] bearerToken = authtoken.split(FoodOrderingUtil.BEARER_TOKEN);
+        if (bearerToken != null && bearerToken.length > 1) {
+            authtoken = bearerToken[1];
+        }
+        CustomerAuthEntity customerAuthEntity = customerDao.getCustomerAuthToken(authtoken);
+        if (customerAuthEntity == null) { // "ATHR-001"
+            throw new AuthorizationFailedException("ATHR-001", "Customer is not Logged in.");
+        }
+
+        if (customerAuthEntity.getLogoutAt() != null) { // "ATHR-002"
+            throw new AuthorizationFailedException("ATHR-002", "Customer is logged out. Log in again to access this endpoint.");
+        }
+        boolean isTokenExpired = utilityService.hasTokenExpired(customerAuthEntity.getExpiresAt().toString());
+        if(isTokenExpired){
+            customerAuthEntity.setLogoutAt(ZonedDateTime.now());
+            customerDao.updateCustomerAuthEntity(customerAuthEntity);
+            throw new AuthorizationFailedException("ATHR-003", "Your session is expired. Log in again to access this endpoint.");
+        }
+        return customerAuthEntity;
     }
 
 }
