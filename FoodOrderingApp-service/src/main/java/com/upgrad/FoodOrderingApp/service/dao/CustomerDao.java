@@ -27,7 +27,7 @@ public class CustomerDao {
         return customer;
     }
 
-    public CustomerAuthEntity createAuthToken(final CustomerAuthEntity customerAuthEntity){
+    public CustomerAuthEntity createAuthToken(final CustomerAuthEntity customerAuthEntity) {
         entityManager.persist(customerAuthEntity);
         return customerAuthEntity;
     }

@@ -52,7 +52,7 @@ public class CustomerController {
     @RequestMapping(method = POST, path = "/customer/login", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<LoginResponse> login(@RequestHeader("authorization") final String authorization) throws AuthenticationFailedException {
         CustomerAuthEntity customerAuthEntity = customerService.signin(authorization);
-        CustomerEntity customerEntity= customerAuthEntity.getCustomer();
+        CustomerEntity customerEntity = customerAuthEntity.getCustomer();
         LoginResponse loginResponse = new LoginResponse().id(customerEntity.getUuid()).message("LOGGED IN SUCCESSFULLY");
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("access_token", customerAuthEntity.getAccessToken());

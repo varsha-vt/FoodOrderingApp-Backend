@@ -57,29 +57,31 @@ public class CustomerService {
 
     @Transactional
     public CustomerAuthEntity signin(String authorization) throws AuthenticationFailedException {
-          String username;
-          String password;
-        try{
+        String username;
+        String password;
+        //'ATH-003' The below try-catch block is used to see if the authrorization is in the correct format
+        try {
             byte[] decode = Base64.getDecoder().decode(authorization.split(FoodOrderingUtil.BASIC_TOKEN)[1]);
             String decodedText = new String(decode);
             String[] decodedArray = decodedText.split(FoodOrderingUtil.COLON);
             username = decodedArray[0];
             password = decodedArray[1];
-            } catch(Exception e){
-            throw new AuthenticationFailedException("ATH-003","Incorrect format of decoded customer name and password");
+        } catch (Exception e) {
+            throw new AuthenticationFailedException("ATH-003", "Incorrect format of decoded customer name and password");
         }
 
         CustomerEntity customer = customerDao.getUserByContactNumber(username);
 
-        //ATH-001
-        if(customer == null){
-            throw new AuthenticationFailedException("ATH-001","This contact number has not been registered!");
+        //ATH-001 The below checks if the entered user exists in the data base
+        if (customer == null) {
+            throw new AuthenticationFailedException("ATH-001", "This contact number has not been registered!");
         }
 
+        //The entered password is encrypted with the same salt of the user and then compared to see if the encrypted password matches that present in the DB
         final String encryptedPassword = cryptoProvider.encrypt(password, customer.getSalt());
         if (encryptedPassword.equals(customer.getPassword())) {
             JwtTokenProvider jwtTokenProvider = new JwtTokenProvider(encryptedPassword);
-            CustomerAuthEntity customerAuthEntity =  new CustomerAuthEntity();
+            CustomerAuthEntity customerAuthEntity = new CustomerAuthEntity();
             customerAuthEntity.setUuid(UUID.randomUUID().toString());
             customerAuthEntity.setCustomer(customer);
             final ZonedDateTime now = ZonedDateTime.now();
@@ -91,11 +93,10 @@ public class CustomerService {
             return customerDao.createAuthToken(customerAuthEntity);
 
         }
-        else
-        {
-            throw new AuthenticationFailedException("ATH-002","Invalid Credentials");
+        //'ATH-002' An error is thrown is credentials do not match
+        else {
+            throw new AuthenticationFailedException("ATH-002", "Invalid Credentials");
         }
-
 
 
     }
