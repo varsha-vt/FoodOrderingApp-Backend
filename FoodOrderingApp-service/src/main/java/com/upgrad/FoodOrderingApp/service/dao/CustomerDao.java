@@ -40,11 +40,18 @@ public class CustomerDao {
         }
     }
 
+    //update customer_auth table
     public void updateCustomerAuthEntity(CustomerAuthEntity authEntity) {
         entityManager.merge(authEntity);
     }
 
-    public void updateCustomer(CustomerEntity customer){
+    //update customer table
+    public void updateCustomer(CustomerEntity customer) {
+        entityManager.merge(customer);
+    }
+
+    //update customer table with the new password and salt
+    public void updateCustomerPassword(CustomerEntity customer) {
         entityManager.merge(customer);
     }
 

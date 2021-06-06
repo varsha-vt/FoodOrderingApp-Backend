@@ -139,7 +139,28 @@ public class CustomerService {
     public String updateCustomer(CustomerEntity customer) {
         customerDao.updateCustomer(customer);
         return customer.getUuid();
+    }
 
+    @Transactional
+    public String updateCustomerPassword(CustomerEntity customer, String oldPassword, String newPassword) throws UpdateCustomerException {
+        //Check if old or new password fields are empty
+        if (oldPassword == null || oldPassword.isEmpty() || newPassword == null || newPassword.isEmpty()) {
+            throw new UpdateCustomerException("UCR-003", "No field should be empty");
+        }
+        //Check if new Password is weak
+        if (!utilityService.isPasswordValid(newPassword)) {
+            throw new UpdateCustomerException("UCR-001", "Weak password!");
+        }
+        //Check if old password is correct
+        final String encryptedPassword = cryptoProvider.encrypt(oldPassword, customer.getSalt());
+        if (!encryptedPassword.equals(customer.getPassword())) {
+            throw new UpdateCustomerException("UCR-004", "Incorrect old password!");
+        }
+        String[] encryptedText = cryptoProvider.encrypt(newPassword);
+        customer.setSalt(encryptedText[0]);
+        customer.setPassword(encryptedText[1]);
+        customerDao.updateCustomerPassword(customer);
+        return customer.getUuid();
     }
 
 }
