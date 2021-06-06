@@ -2,22 +2,23 @@ package com.upgrad.FoodOrderingApp.api.controller;
 
 import com.upgrad.FoodOrderingApp.api.model.*;
 import com.upgrad.FoodOrderingApp.service.businness.CustomerService;
+import com.upgrad.FoodOrderingApp.service.businness.UtilityService;
 import com.upgrad.FoodOrderingApp.service.entity.CustomerAuthEntity;
 import com.upgrad.FoodOrderingApp.service.entity.CustomerEntity;
 import com.upgrad.FoodOrderingApp.service.exception.AuthenticationFailedException;
 import com.upgrad.FoodOrderingApp.service.exception.AuthorizationFailedException;
 import com.upgrad.FoodOrderingApp.service.exception.SignUpRestrictedException;
 import com.upgrad.FoodOrderingApp.service.exception.UpdateCustomerException;
+import com.upgrad.FoodOrderingApp.service.util.FoodOrderingUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -28,6 +29,8 @@ import static org.springframework.web.bind.annotation.RequestMethod.*;
 public class CustomerController {
     @Autowired
     private CustomerService customerService;
+    @Autowired
+    private UtilityService utilityService;
 
     //Implementation of signup - "/customer/signup" API endpoint
     @CrossOrigin
@@ -35,15 +38,18 @@ public class CustomerController {
     public ResponseEntity<SignupCustomerResponse> signup(final SignupCustomerRequest signupCustomerRequest) throws SignUpRestrictedException {
         CustomerEntity customerEntity = new CustomerEntity();
         customerEntity.setUuid(UUID.randomUUID().toString());
-        customerEntity.setFirstname(signupCustomerRequest.getFirstName());
-        customerEntity.setLastname(signupCustomerRequest.getLastName());
+        customerEntity.setFirstName(signupCustomerRequest.getFirstName());
+        customerEntity.setLastName(signupCustomerRequest.getLastName());
         customerEntity.setEmail(signupCustomerRequest.getEmailAddress());
         customerEntity.setContactNumber(signupCustomerRequest.getContactNumber());
         customerEntity.setPassword(signupCustomerRequest.getPassword());
-
-        final CustomerEntity createdCustomer = customerService.signUpNewCustomer(customerEntity);
+        CustomerEntity customer = customerService.saveCustomer(customerEntity);
         SignupCustomerResponse signupCustomerResponse = new SignupCustomerResponse();
-        signupCustomerResponse.id(createdCustomer.getUuid()).status("CUSTOMER SUCCESSFULLY REGISTERED");
+        try{
+            signupCustomerResponse.id(customer.getUuid()).status("CUSTOMER SUCCESSFULLY REGISTERED");
+        }catch (Exception e){
+            throw new SignUpRestrictedException("SGR-005", "Except last name all fields should be filled");
+        }
         return new ResponseEntity<SignupCustomerResponse>(signupCustomerResponse, HttpStatus.CREATED);
     }
 
@@ -51,11 +57,23 @@ public class CustomerController {
     @CrossOrigin
     @RequestMapping(method = POST, path = "/customer/login", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<LoginResponse> login(@RequestHeader("authorization") final String authorization) throws AuthenticationFailedException {
-        CustomerAuthEntity customerAuthEntity = customerService.signin(authorization);
+        //'ATH-003' The below try-catch block is used to see if the authrorization is in the correct format
+        String username;
+        String password;
+        try {
+            byte[] decode = Base64.getDecoder().decode(authorization.split(FoodOrderingUtil.BASIC_TOKEN)[1]);
+            String decodedText = new String(decode);
+            String[] decodedArray = decodedText.split(FoodOrderingUtil.COLON);
+            username = decodedArray[0];
+            password = decodedArray[1];
+        } catch (Exception e) {
+            throw new AuthenticationFailedException("ATH-003", "Incorrect format of decoded customer name and password");
+        }
+        CustomerAuthEntity customerAuthEntity = customerService.authenticate(username,password);
         CustomerEntity customerEntity = customerAuthEntity.getCustomer();
         LoginResponse loginResponse = new LoginResponse().id(customerEntity.getUuid()).message("LOGGED IN SUCCESSFULLY");
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("access_token", customerAuthEntity.getAccessToken());
+        httpHeaders.add("access-token", customerAuthEntity.getAccessToken());
         return new ResponseEntity<LoginResponse>(loginResponse, httpHeaders, HttpStatus.OK);
     }
 
@@ -63,9 +81,11 @@ public class CustomerController {
     @CrossOrigin
     @RequestMapping(method = POST, path = "/customer/logout", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<LogoutResponse> logout(@RequestHeader("authorization") final String authorization) throws AuthorizationFailedException {
-        String uuid = customerService.getCustomerUUID(authorization);
+        String accessToken = splitAuthorization(authorization);
+        //CustomerAuthEntity customerAuthEntity = customerService.validateAccessToken(authorization);
+        CustomerAuthEntity authEntity = customerService.logout(accessToken);
         LogoutResponse logoutResponse = new LogoutResponse();
-        logoutResponse.setId(uuid);
+        logoutResponse.setId(authEntity.getCustomer().getUuid());
         logoutResponse.setMessage("LOGGED OUT SUCCESSFULLY");
         return new ResponseEntity<LogoutResponse>(logoutResponse, HttpStatus.OK);
     }
@@ -73,39 +93,80 @@ public class CustomerController {
     //Implementation of "/customer" API
     @CrossOrigin
     @RequestMapping(method = PUT, path = "/customer", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<UpdateCustomerResponse> updateName(@RequestHeader("authorization") final String authorization, final UpdateCustomerRequest updateCustomerRequest) throws AuthorizationFailedException, UpdateCustomerException {
-        CustomerAuthEntity customerAuth = customerService.validateUserAuthentication(authorization);
-        //Check if the firstname entered is empty
-        if (updateCustomerRequest.getFirstName() == null || updateCustomerRequest.getFirstName().isEmpty()) {
+    public ResponseEntity<UpdateCustomerResponse> updateName(@RequestHeader("authorization") final String authorization, @RequestBody UpdateCustomerRequest updateCustomerRequest) throws AuthorizationFailedException, UpdateCustomerException {
+        String accessToken = splitAuthorization(authorization);
+        CustomerEntity customer = customerService.getCustomer(accessToken);
+//        customerService.validateAccessToken(accessToken);
+        String newFirstName = updateCustomerRequest.getFirstName();
+        String newLastName = updateCustomerRequest.getLastName();
+//        Check if the firstname entered is empty
+        if (newFirstName == null || newFirstName.isEmpty()) {
             throw new UpdateCustomerException("UCR-002", "First name field should not be empty");
         }
-        CustomerEntity customer = customerAuth.getCustomer();
-        customer.setFirstname(updateCustomerRequest.getFirstName());
-        customer.setLastname(updateCustomerRequest.getLastName());
-        String uuid = customerService.updateCustomer(customer);
+        else{
+            // CustomerEntity customer = customerAuth.getCustomer();
+            customer.setFirstName(newFirstName);
+            customer.setLastName(newLastName);
+            CustomerEntity updateCustomer = customerService.updateCustomer(customer);
 
-        UpdateCustomerResponse response = new UpdateCustomerResponse();
-        response.setId(uuid);
-        response.setFirstName(customer.getFirstname());
-        response.setLastName(customer.getLastname());
-        response.setStatus("CUSTOMER DETAILS UPDATED SUCCESSFULLY");
-        return new ResponseEntity<UpdateCustomerResponse>(response, HttpStatus.OK);
+            UpdateCustomerResponse response = new UpdateCustomerResponse();
+            response.setId(updateCustomer.getUuid());
+            response.setFirstName(updateCustomer.getFirstName());
+            response.setLastName(updateCustomer.getLastName());
+            response.setStatus("CUSTOMER DETAILS UPDATED SUCCESSFULLY");
+            return new ResponseEntity<UpdateCustomerResponse>(response, HttpStatus.OK);
+        }
+
     }
+
+//    //Implementation of "/customer/password" API
+//    @CrossOrigin
+//    @RequestMapping(method = PUT, path = "/customer/password", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+//    public ResponseEntity<UpdatePasswordResponse> updatePassword(@RequestHeader("authorization") final String authorization, @RequestBody UpdatePasswordRequest updatePasswordRequest) throws AuthorizationFailedException, UpdateCustomerException {
+//        CustomerAuthEntity customerAuth = customerService.validateAccessToken(authorization);
+//        String oldPassword = updatePasswordRequest.getOldPassword();
+//        String newPassword = updatePasswordRequest.getNewPassword();
+//        CustomerEntity customer = customerAuth.getCustomer();
+//        String uuid = customerService.updateCustomerPassword(oldPassword, newPassword, customer);
+//
+//        UpdatePasswordResponse response = new UpdatePasswordResponse();
+//        response.setId(uuid);
+//        response.setStatus("CUSTOMER PASSWORD UPDATED SUCCESSFULLY");
+//        return new ResponseEntity<UpdatePasswordResponse>(response, HttpStatus.OK);
+//    }
 
     //Implementation of "/customer/password" API
     @CrossOrigin
     @RequestMapping(method = PUT, path = "/customer/password", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<UpdatePasswordResponse> updatePassword(@RequestHeader("authorization") final String authorization, final UpdatePasswordRequest updatePasswordRequest) throws AuthorizationFailedException, UpdateCustomerException {
-        CustomerAuthEntity customerAuth = customerService.validateUserAuthentication(authorization);
+    public ResponseEntity<UpdatePasswordResponse> updatePassword(@RequestHeader("authorization") final String authorization, @RequestBody UpdatePasswordRequest updatePasswordRequest) throws AuthorizationFailedException, UpdateCustomerException {
         String oldPassword = updatePasswordRequest.getOldPassword();
         String newPassword = updatePasswordRequest.getNewPassword();
-        CustomerEntity customer = customerAuth.getCustomer();
-        String uuid = customerService.updateCustomerPassword(customer, oldPassword, newPassword);
+        if(utilityService.isStringEmptyOrNull(oldPassword) || utilityService.isStringEmptyOrNull(newPassword)) {
+            throw new UpdateCustomerException("UCR-003", "No field should be empty");
+        }
+        String accessToken = splitAuthorization(authorization);
+        CustomerEntity customer = customerService.getCustomer(accessToken);
+        CustomerEntity updateCustomer = customerService.updateCustomerPassword(oldPassword, newPassword, customer);
 
         UpdatePasswordResponse response = new UpdatePasswordResponse();
-        response.setId(uuid);
+        response.setId(updateCustomer.getUuid());
         response.setStatus("CUSTOMER PASSWORD UPDATED SUCCESSFULLY");
         return new ResponseEntity<UpdatePasswordResponse>(response, HttpStatus.OK);
+    }
+
+
+
+    public String splitAuthorization(String authorization) throws AuthorizationFailedException{
+        String accessToken=null;
+        try{
+            String[] bearerToken = authorization.split(FoodOrderingUtil.BEARER_TOKEN);
+            if (bearerToken != null && bearerToken.length > 1) {
+                accessToken = bearerToken[1];
+            }
+        }catch(Exception e){
+            throw new AuthorizationFailedException("ATH-000","Bearer incorrect");
+        }
+        return accessToken;
     }
 
 }

@@ -23,11 +23,11 @@ public class CustomerEntity implements Serializable {
 
     @Size(max = 30)
     @Column(name = "firstname")
-    private String firstname;
+    private String firstName;
 
     @Size(max = 30)
     @Column(name = "lastname")
-    private String lastname;
+    private String lastName;
 
     @Size(max = 50)
     @Column(name = "email")
@@ -64,20 +64,20 @@ public class CustomerEntity implements Serializable {
         this.uuid = uuid;
     }
 
-    public String getFirstname() {
-        return firstname;
+    public String getFirstName() {
+        return firstName;
     }
 
-    public void setFirstname(String firstname) {
-        this.firstname = firstname;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
     }
 
-    public String getLastname() {
-        return lastname;
+    public String getLastName() {
+        return lastName;
     }
 
-    public void setLastname(String lastname) {
-        this.lastname = lastname;
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public String getEmail() {
