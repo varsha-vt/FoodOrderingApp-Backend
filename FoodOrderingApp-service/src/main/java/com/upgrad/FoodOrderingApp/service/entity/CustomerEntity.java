@@ -19,11 +19,9 @@ public class CustomerEntity implements Serializable {
 
     @Column(name = "uuid")
     @Size(max = 200)
-    @NotNull
     private String uuid;
 
     @Size(max = 30)
-    @NotNull
     @Column(name = "firstname")
     private String firstname;
 
@@ -32,22 +30,18 @@ public class CustomerEntity implements Serializable {
     private String lastname;
 
     @Size(max = 50)
-    @NotNull
     @Column(name = "email")
     private String email;
 
     @Size(max = 30)
-    @NotNull
     @Column(name = "contact_number")
     private String contactNumber;
 
     @Size(max = 255)
-    @NotNull
     @Column(name = "password")
     private String password;
 
     @Size(max = 255)
-    @NotNull
     @Column(name = "salt")
     private String salt;
 

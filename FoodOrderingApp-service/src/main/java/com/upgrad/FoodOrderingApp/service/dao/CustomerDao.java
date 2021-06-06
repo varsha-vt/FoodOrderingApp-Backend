@@ -44,4 +44,8 @@ public class CustomerDao {
         entityManager.merge(authEntity);
     }
 
+    public void updateCustomer(CustomerEntity customer){
+        entityManager.merge(customer);
+    }
+
 }
