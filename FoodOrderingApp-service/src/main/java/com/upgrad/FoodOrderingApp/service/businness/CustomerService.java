@@ -7,7 +7,6 @@ import com.upgrad.FoodOrderingApp.service.exception.AuthenticationFailedExceptio
 import com.upgrad.FoodOrderingApp.service.exception.AuthorizationFailedException;
 import com.upgrad.FoodOrderingApp.service.exception.SignUpRestrictedException;
 import com.upgrad.FoodOrderingApp.service.exception.UpdateCustomerException;
-import com.upgrad.FoodOrderingApp.service.util.FoodOrderingUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,27 +27,28 @@ public class CustomerService {
 
     @Transactional
     public CustomerEntity saveCustomer(CustomerEntity customerEntity) throws SignUpRestrictedException {
-        if (customerDao.getUserByContactNumber(customerEntity.getContactNumber()) != null) {
-            throw new SignUpRestrictedException("SGR-001", "This contact number is already registered! Try other contact number.");
-        }
-        /* 'SGR-002' To validate emailID. This does not allow emails that have . or _ (underscore) in the address as the project statement asks to validate
-              in the format of xxx@xx.xx where x is number or letter */
-        else if (!customerEntity.getEmail().matches("^(([A-Za-z0-9]*))(@)(([A-Za-z0-9]*))(?<!\\.)\\.(?!\\.)(([A-Za-z0-9]*))")) {
-            throw new SignUpRestrictedException("SGR-002", "Invalid email-id format!");
-        } // 'SGR-003' Validates contact no for length = 10 and must contain only digits
-        else if (!utilityService.isPhoneNumberValid(customerEntity.getContactNumber())) {
-            throw new SignUpRestrictedException("SGR-003", "Invalid contact number!");
-        } // 'SGR-004' Validates if the password criteria is met
-        else if (!utilityService.isPasswordValid(customerEntity.getPassword())) {
-            throw new SignUpRestrictedException("SGR-004", "Weak password!");
-        }
         //'SGR-005' To validate of there are any empty fields except for lastname
-        else if (utilityService.isStringEmptyOrNull(customerEntity.getFirstName()) ||
+        if (utilityService.isStringEmptyOrNull(customerEntity.getFirstName()) ||
                 utilityService.isStringEmptyOrNull(customerEntity.getEmail()) ||
                 utilityService.isStringEmptyOrNull(customerEntity.getContactNumber()) ||
                 utilityService.isStringEmptyOrNull(customerEntity.getPassword())
                 ) {
             throw new SignUpRestrictedException("SGR-005", "Except last name all fields should be filled");
+        }
+
+        if (customerDao.getUserByContactNumber(customerEntity.getContactNumber()) != null) {
+            throw new SignUpRestrictedException("SGR-001", "This contact number is already registered! Try other contact number.");
+        }
+        /* 'SGR-002' To validate emailID. This does not allow emails that have . or _ (underscore) in the address as the project statement asks to validate
+              in the format of xxx@xx.xx where x is number or letter */
+        if (!customerEntity.getEmail().matches("^(([A-Za-z0-9]*))(@)(([A-Za-z0-9]*))(?<!\\.)\\.(?!\\.)(([A-Za-z0-9]*))")) {
+            throw new SignUpRestrictedException("SGR-002", "Invalid email-id format!");
+        } // 'SGR-003' Validates contact no for length = 10 and must contain only digits
+        if (!utilityService.isPhoneNumberValid(customerEntity.getContactNumber())) {
+            throw new SignUpRestrictedException("SGR-003", "Invalid contact number!");
+        } // 'SGR-004' Validates if the password criteria is met
+        if (!utilityService.isPasswordValid(customerEntity.getPassword())) {
+            throw new SignUpRestrictedException("SGR-004", "Weak password!");
         } else {
 
             String[] encryptedText = cryptoProvider.encrypt(customerEntity.getPassword());
@@ -60,21 +60,7 @@ public class CustomerService {
 
     @Transactional
     public CustomerAuthEntity authenticate(String username, String password) throws AuthenticationFailedException {
-//        String username;
-//        String password;
-//        //'ATH-003' The below try-catch block is used to see if the authrorization is in the correct format
-//        try {
-//            byte[] decode = Base64.getDecoder().decode(authorization.split(FoodOrderingUtil.BASIC_TOKEN)[1]);
-//            String decodedText = new String(decode);
-//            String[] decodedArray = decodedText.split(FoodOrderingUtil.COLON);
-//            username = decodedArray[0];
-//            password = decodedArray[1];
-//        } catch (Exception e) {
-//            throw new AuthenticationFailedException("ATH-003", "Incorrect format of decoded customer name and password");
-//        }
-
         CustomerEntity customer = customerDao.getUserByContactNumber(username);
-
         //ATH-001 The below checks if the entered user exists in the data base
         if (customer == null) {
             throw new AuthenticationFailedException("ATH-001", "This contact number has not been registered!");
@@ -113,10 +99,6 @@ public class CustomerService {
 
     //Common method that will be used by all endpoints to validate the accessToken
     public CustomerAuthEntity validateAccessToken(String authtoken) throws AuthorizationFailedException {
-//        String[] bearerToken = authtoken.split(FoodOrderingUtil.BEARER_TOKEN);
-//        if (bearerToken != null && bearerToken.length > 1) {
-//            authtoken = bearerToken[1];
-//        }
         CustomerAuthEntity customerAuthEntity = customerDao.getCustomerAuthToken(authtoken);
         if (customerAuthEntity == null) { // "ATHR-001" to check if authtoken is valid or present in the DB
             throw new AuthorizationFailedException("ATHR-001", "Customer is not Logged in.");
@@ -143,19 +125,12 @@ public class CustomerService {
     //Update the customer name
     @Transactional
     public CustomerEntity updateCustomer(CustomerEntity customer) throws UpdateCustomerException {
-//        if (customer.getFirstName() == null || customer.getFirstName().isEmpty()) {
-//            throw new UpdateCustomerException("UCR-002", "First name field should not be empty");
-//        }
         customerDao.updateCustomer(customer);
         return customer;
     }
 
     @Transactional
     public CustomerEntity updateCustomerPassword(String oldPassword, String newPassword, CustomerEntity customer) throws UpdateCustomerException {
-//        //Check if old or new password fields are empty
-//        if (oldPassword == null || oldPassword.isEmpty() || newPassword == null || newPassword.isEmpty()) {
-//            throw new UpdateCustomerException("UCR-003", "No field should be empty");
-//        }
         //Check if new Password is weak
         if (!utilityService.isPasswordValid(newPassword)) {
             throw new UpdateCustomerException("UCR-001", "Weak password!");
