@@ -1,12 +1,18 @@
 package com.upgrad.FoodOrderingApp.service.businness;
 
 import com.upgrad.FoodOrderingApp.service.dao.CustomerDao;
+import com.upgrad.FoodOrderingApp.service.entity.CustomerAuthEntity;
 import com.upgrad.FoodOrderingApp.service.entity.CustomerEntity;
+import com.upgrad.FoodOrderingApp.service.exception.AuthenticationFailedException;
 import com.upgrad.FoodOrderingApp.service.exception.SignUpRestrictedException;
+import com.upgrad.FoodOrderingApp.service.util.FoodOrderingUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.time.ZonedDateTime;
+import java.util.Base64;
+import java.util.UUID;
 
 @Service
 public class CustomerService {
@@ -47,6 +53,51 @@ public class CustomerService {
             customerEntity.setPassword(encryptedText[1]);
             return customerDao.createNewCustomer(customerEntity);
         }
+    }
+
+    @Transactional
+    public CustomerAuthEntity signin(String authorization) throws AuthenticationFailedException {
+          String username;
+          String password;
+        try{
+            byte[] decode = Base64.getDecoder().decode(authorization.split(FoodOrderingUtil.BASIC_TOKEN)[1]);
+            String decodedText = new String(decode);
+            String[] decodedArray = decodedText.split(FoodOrderingUtil.COLON);
+            username = decodedArray[0];
+            password = decodedArray[1];
+            } catch(Exception e){
+            throw new AuthenticationFailedException("ATH-003","Incorrect format of decoded customer name and password");
+        }
+
+        CustomerEntity customer = customerDao.getUserByContactNumber(username);
+
+        //ATH-001
+        if(customer == null){
+            throw new AuthenticationFailedException("ATH-001","This contact number has not been registered!");
+        }
+
+        final String encryptedPassword = cryptoProvider.encrypt(password, customer.getSalt());
+        if (encryptedPassword.equals(customer.getPassword())) {
+            JwtTokenProvider jwtTokenProvider = new JwtTokenProvider(encryptedPassword);
+            CustomerAuthEntity customerAuthEntity =  new CustomerAuthEntity();
+            customerAuthEntity.setUuid(UUID.randomUUID().toString());
+            customerAuthEntity.setCustomer(customer);
+            final ZonedDateTime now = ZonedDateTime.now();
+            final ZonedDateTime expiresAt = now.plusHours(8);
+            customerAuthEntity.setAccessToken(jwtTokenProvider.generateToken(customer.getUuid(), now, expiresAt));
+            customerAuthEntity.setLoginAt(now);
+            customerAuthEntity.setLogoutAt(expiresAt);
+            customerAuthEntity.setExpiresAt(expiresAt);
+            return customerDao.createAuthToken(customerAuthEntity);
+
+        }
+        else
+        {
+            throw new AuthenticationFailedException("ATH-002","Invalid Credentials");
+        }
+
+
+
     }
 
 }
