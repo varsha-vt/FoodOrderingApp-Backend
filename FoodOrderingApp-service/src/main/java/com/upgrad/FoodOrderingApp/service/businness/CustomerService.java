@@ -102,7 +102,7 @@ public class CustomerService {
 
     @Transactional
     public String getCustomerUUID(String authtoken) throws AuthorizationFailedException {
-        CustomerAuthEntity customerAuthEntity =  validateUserAuthentication(authtoken);
+        CustomerAuthEntity customerAuthEntity = validateUserAuthentication(authtoken);
         customerAuthEntity.setLogoutAt(ZonedDateTime.now());
         customerDao.updateCustomerAuthEntity(customerAuthEntity);
         CustomerEntity customer = customerAuthEntity.getCustomer();
@@ -116,15 +116,16 @@ public class CustomerService {
             authtoken = bearerToken[1];
         }
         CustomerAuthEntity customerAuthEntity = customerDao.getCustomerAuthToken(authtoken);
-        if (customerAuthEntity == null) { // "ATHR-001"
+        if (customerAuthEntity == null) { // "ATHR-001" to check if authtoken is valid or present in the DB
             throw new AuthorizationFailedException("ATHR-001", "Customer is not Logged in.");
         }
 
-        if (customerAuthEntity.getLogoutAt() != null) { // "ATHR-002"
+        if (customerAuthEntity.getLogoutAt() != null) { // "ATHR-002" To check if the authtoken is no more valid since user has logged out
             throw new AuthorizationFailedException("ATHR-002", "Customer is logged out. Log in again to access this endpoint.");
         }
+        //"ATHR-003" To check if token has expired, if yes then thelogged out time is updated to current time
         boolean isTokenExpired = utilityService.hasTokenExpired(customerAuthEntity.getExpiresAt().toString());
-        if(isTokenExpired){
+        if (isTokenExpired) {
             customerAuthEntity.setLogoutAt(ZonedDateTime.now());
             customerDao.updateCustomerAuthEntity(customerAuthEntity);
             throw new AuthorizationFailedException("ATHR-003", "Your session is expired. Log in again to access this endpoint.");

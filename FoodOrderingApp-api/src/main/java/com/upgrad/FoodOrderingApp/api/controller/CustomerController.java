@@ -61,13 +61,14 @@ public class CustomerController {
         return new ResponseEntity<LoginResponse>(loginResponse, httpHeaders, HttpStatus.OK);
     }
 
+    //Implementation of "/customer/logout" API
     @CrossOrigin
     @RequestMapping(method = POST, path = "/customer/logout", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<LogoutResponse> logout(@RequestHeader("authorization") final String authorization) throws AuthorizationFailedException {
         String uuid = customerService.getCustomerUUID(authorization);
-        LogoutResponse logoutResponse =  new LogoutResponse();
+        LogoutResponse logoutResponse = new LogoutResponse();
         logoutResponse.setId(uuid);
         logoutResponse.setMessage("LOGGED OUT SUCCESSFULLY");
-        return new ResponseEntity<LogoutResponse>(logoutResponse,HttpStatus.OK);
+        return new ResponseEntity<LogoutResponse>(logoutResponse, HttpStatus.OK);
     }
 }
