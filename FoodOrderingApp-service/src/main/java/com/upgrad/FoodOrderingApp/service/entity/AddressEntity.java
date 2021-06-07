@@ -47,6 +47,9 @@ public class AddressEntity implements Serializable {
     @Column(name="active")
     private Integer active;
 
+    public AddressEntity(){
+    }
+
     public AddressEntity(String uuid, String flatBuilNo, String locality, String city, String pincode, StateEntity stateEntity) {
         this.uuid = uuid;
         this.flatBuildingNumber = flatBuilNo;
