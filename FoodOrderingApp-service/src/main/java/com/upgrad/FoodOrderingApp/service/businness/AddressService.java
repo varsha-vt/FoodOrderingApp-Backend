@@ -2,6 +2,7 @@ package com.upgrad.FoodOrderingApp.service.businness;
 
 import com.upgrad.FoodOrderingApp.service.dao.AddressDao;
 import com.upgrad.FoodOrderingApp.service.entity.AddressEntity;
+import com.upgrad.FoodOrderingApp.service.entity.CustomerEntity;
 import com.upgrad.FoodOrderingApp.service.entity.StateEntity;
 import com.upgrad.FoodOrderingApp.service.exception.AddressNotFoundException;
 import com.upgrad.FoodOrderingApp.service.exception.SaveAddressException;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import javax.swing.plaf.nimbus.State;
 import javax.transaction.Transactional;
+import java.util.List;
 
 @Service
 public class AddressService {
@@ -58,9 +60,12 @@ public class AddressService {
         if(!utilityService.isPincodeValid(addressEntity.getPincode())){
             throw new SaveAddressException("SAR-002","Invalid pincode");
         }
-
         addressEntity.setStateId(state);
         return addressDao.saveAddress(addressEntity);
+    }
+    @Transactional
+    public List<AddressEntity> getAllAddress(CustomerEntity customerEntity){
+        return addressDao.getAllAddresses();
     }
 
 }

@@ -7,6 +7,10 @@ import java.io.Serializable;
 
 @Entity
 @Table(name="address")
+@NamedQueries({
+        @NamedQuery(name = "getAllAddresses", query = "SELECT u FROM AddressEntity u"),
+        @NamedQuery(name = "getAddressByUuid", query = "SELECT u FROM AddressEntity u WHERE uuid=:uuid")
+})
 public class AddressEntity implements Serializable {
 
     @Id
