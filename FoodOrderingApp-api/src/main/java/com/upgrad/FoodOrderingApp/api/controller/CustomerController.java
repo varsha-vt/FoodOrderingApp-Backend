@@ -84,7 +84,7 @@ public class CustomerController {
     @CrossOrigin
     @RequestMapping(method = POST, path = "/customer/logout", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<LogoutResponse> logout(@RequestHeader("authorization") final String authorization) throws AuthorizationFailedException {
-        String accessToken = splitAuthorization(authorization);
+        String accessToken = utilityService.splitAuthorization(authorization);
         CustomerAuthEntity authEntity = customerService.logout(accessToken);
         LogoutResponse logoutResponse = new LogoutResponse();
         logoutResponse.setId(authEntity.getCustomer().getUuid());
@@ -96,7 +96,7 @@ public class CustomerController {
     @CrossOrigin
     @RequestMapping(method = PUT, path = "/customer", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<UpdateCustomerResponse> updateName(@RequestHeader("authorization") final String authorization, @RequestBody UpdateCustomerRequest updateCustomerRequest) throws AuthorizationFailedException, UpdateCustomerException {
-        String accessToken = splitAuthorization(authorization);
+        String accessToken = utilityService.splitAuthorization(authorization);
         CustomerEntity customer = customerService.getCustomer(accessToken);
         String newFirstName = updateCustomerRequest.getFirstName();
         String newLastName = updateCustomerRequest.getLastName();
@@ -127,7 +127,7 @@ public class CustomerController {
         if (utilityService.isStringEmptyOrNull(oldPassword) || utilityService.isStringEmptyOrNull(newPassword)) {
             throw new UpdateCustomerException("UCR-003", "No field should be empty");
         }
-        String accessToken = splitAuthorization(authorization);
+        String accessToken = utilityService.splitAuthorization(authorization);
         CustomerEntity customer = customerService.getCustomer(accessToken);
         CustomerEntity updateCustomer = customerService.updateCustomerPassword(oldPassword, newPassword, customer);
 
@@ -137,18 +137,18 @@ public class CustomerController {
         return new ResponseEntity<UpdatePasswordResponse>(response, HttpStatus.OK);
     }
 
-    //Generic method to extract the token without the word Bearer
-    public String splitAuthorization(String authorization) throws AuthorizationFailedException {
-        String accessToken = null;
-        try {
-            String[] bearerToken = authorization.split(FoodOrderingUtil.BEARER_TOKEN);
-            if (bearerToken != null && bearerToken.length > 1) {
-                accessToken = bearerToken[1];
-            }
-        } catch (Exception e) {
-            throw new AuthorizationFailedException("ATH-000", "Bearer incorrect");
-        }
-        return accessToken;
-    }
+//    //Generic method to extract the token without the word Bearer
+//    public String splitAuthorization(String authorization) throws AuthorizationFailedException {
+//        String accessToken = null;
+//        try {
+//            String[] bearerToken = authorization.split(FoodOrderingUtil.BEARER_TOKEN);
+//            if (bearerToken != null && bearerToken.length > 1) {
+//                accessToken = bearerToken[1];
+//            }
+//        } catch (Exception e) {
+//            throw new AuthorizationFailedException("ATH-000", "Bearer incorrect");
+//        }
+//        return accessToken;
+//    }
 
 }

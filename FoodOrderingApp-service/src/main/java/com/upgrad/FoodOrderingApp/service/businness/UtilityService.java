@@ -1,5 +1,7 @@
 package com.upgrad.FoodOrderingApp.service.businness;
 
+import com.upgrad.FoodOrderingApp.service.exception.AuthorizationFailedException;
+import com.upgrad.FoodOrderingApp.service.util.FoodOrderingUtil;
 import org.springframework.stereotype.Component;
 
 import java.text.SimpleDateFormat;
@@ -9,6 +11,20 @@ import java.util.regex.Pattern;
 
 @Component
 public class UtilityService {
+
+    //Generic method to extract the token without the word Bearer
+    public String splitAuthorization(String authorization) throws AuthorizationFailedException {
+        String accessToken = null;
+        try {
+            String[] bearerToken = authorization.split(FoodOrderingUtil.BEARER_TOKEN);
+            if (bearerToken != null && bearerToken.length > 1) {
+                accessToken = bearerToken[1];
+            }
+        } catch (Exception e) {
+            throw new AuthorizationFailedException("ATH-000", "Bearer incorrect");
+        }
+        return accessToken;
+    }
 
     public boolean isStringEmptyOrNull(String variable) {
         if (variable == null || variable.isEmpty())
@@ -55,5 +71,12 @@ public class UtilityService {
         } else {
             return true;
         }
+    }
+
+    public boolean isPincodeValid(String pincode){
+        if(pincode.length()==6 &&  pincode.matches("[0-9]+"))
+            return true;
+        else
+            return false;
     }
 }
