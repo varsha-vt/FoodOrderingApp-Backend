@@ -8,6 +8,12 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name="restaurant")
+@NamedQueries({
+
+        @NamedQuery(name = "getRestaurantByUuid", query = "SELECT r FROM RestaurantEntity r WHERE r.uuid = :uuid"),
+        @NamedQuery(name = "restaurantsByRating", query = "SELECT r FROM RestaurantEntity r ORDER BY r.customerRating DESC"),
+        @NamedQuery(name = "restaurantsByName", query = "SELECT r FROM  RestaurantEntity r WHERE LOWER(r.restaurantName) LIKE :restaurant_lowercase"),
+})
 public class RestaurantEntity implements Serializable {
 
     @Id
@@ -32,7 +38,7 @@ public class RestaurantEntity implements Serializable {
 
     @Column(name="customer_rating")
     @NotNull
-    private BigDecimal customerRating;
+    private double customerRating;
 
     @Column(name="average_price_for_two")
     @NotNull
@@ -81,11 +87,11 @@ public class RestaurantEntity implements Serializable {
         this.photoUrl = photoUrl;
     }
 
-    public BigDecimal getCustomerRating() {
+    public double getCustomerRating() {
         return customerRating;
     }
 
-    public void setCustomerRating(BigDecimal customerRating) {
+    public void setCustomerRating(double customerRating) {
         this.customerRating = customerRating;
     }
 
