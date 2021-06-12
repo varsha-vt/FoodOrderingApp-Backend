@@ -1,10 +1,16 @@
 package com.upgrad.FoodOrderingApp.service.entity;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import javax.persistence.*;
 import java.io.Serializable;
 
 @Entity
 @Table(name = "customer_address")
+@NamedQueries({
+        @NamedQuery(name = "getEntityByAddress", query = "SELECT u FROM CustomerAddressEntity u WHERE address_id=:address_id")
+})
 public class CustomerAddressEntity implements Serializable {
 
     @Id
@@ -13,10 +19,12 @@ public class CustomerAddressEntity implements Serializable {
     private Integer id;
 
     @ManyToOne(fetch = FetchType.EAGER)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "customer_id")
     private CustomerEntity customer;
 
     @ManyToOne(fetch = FetchType.EAGER)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "address_id")
     private AddressEntity address;
 

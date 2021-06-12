@@ -15,14 +15,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
@@ -41,7 +40,7 @@ public class AddressController {
     @RequestMapping(method = POST, path = "/address", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<SaveAddressResponse> saveAddress(@RequestHeader("authorization") final String authorization, @RequestBody  SaveAddressRequest saveAddressRequest) throws AuthorizationFailedException, SaveAddressException, AddressNotFoundException {
         String accessToken = utilityService.splitAuthorization(authorization);
-        customerService.getCustomer(accessToken);
+        CustomerEntity customerEntity = customerService.getCustomer(accessToken);
 
         //Check if any field is empty
         String buildName = saveAddressRequest.getFlatBuildingName();
@@ -61,6 +60,7 @@ public class AddressController {
             throw new AddressNotFoundException("ANF-002", "No state by this id");
         }
         AddressEntity createdAddress = addressService.saveAddress(newAddress, state);
+        addressService.saveCustomerAddress(createdAddress,customerEntity.getId());
         SaveAddressResponse response =  new SaveAddressResponse();
         response.setId((createdAddress.getUuid()));
         response.setStatus("ADDRESS SUCCESSFULLY REGISTERED");
@@ -90,5 +90,41 @@ public class AddressController {
             addressListResponse.addAddressesItem(item);
         }
         return new ResponseEntity(addressListResponse, HttpStatus.OK);
+    }
+
+
+    @RequestMapping(method = DELETE, path = "/address/customer/{address_id}" ,produces = MediaType.APPLICATION_JSON_UTF8_VALUE )
+    public ResponseEntity<SaveAddressResponse> deleteAddress(@RequestHeader("authorization") String authorization, @PathVariable("address_id") String addressId) throws AuthorizationFailedException, AddressNotFoundException {
+        String accessToken = utilityService.splitAuthorization(authorization);
+        CustomerEntity customerEntity = customerService.getCustomer(accessToken);
+        AddressEntity addressEntity = addressService.getAddressByUUID(addressId, customerEntity);
+
+        AddressEntity deletedAddress = addressService.deleteAddress(addressEntity);
+
+        SaveAddressResponse response = new SaveAddressResponse();
+        response.setId(deletedAddress.getUuid());
+        response.setStatus("ADDRESS DELETED SUCCESSFULLY");
+        return new ResponseEntity<SaveAddressResponse>(response,HttpStatus.OK);
+    }
+
+    @RequestMapping(path = "/states",method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE )
+    public ResponseEntity<StatesListResponse> getAllStates() {
+        List<StateEntity> listOfStates = addressService.getAllStates();
+        StatesListResponse apiResponse = new StatesListResponse();
+        if(listOfStates == null){
+            apiResponse.setStates(null);
+            return new ResponseEntity(apiResponse, HttpStatus.NOT_FOUND);
+        }
+        else {
+            List<StatesList> list = new ArrayList<StatesList>();
+            for (StateEntity state : listOfStates) {
+                StatesList listItem = new StatesList();
+                listItem.setId(UUID.fromString(state.getUuid()));
+                listItem.setStateName(state.getStateName());
+                list.add(listItem);
+            }
+            apiResponse.setStates(list);
+            return new ResponseEntity(apiResponse, HttpStatus.OK);
+        }
     }
 }
