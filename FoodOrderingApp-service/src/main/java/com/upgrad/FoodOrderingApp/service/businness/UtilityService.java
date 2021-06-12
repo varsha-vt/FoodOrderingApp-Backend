@@ -79,4 +79,17 @@ public class UtilityService {
         else
             return false;
     }
+
+    public boolean isValidCustomerRating(String customerRating) {
+        boolean flag = true;
+        try{
+            double num = Double.parseDouble(customerRating);
+            if(num > 5.0 || num <1){
+                flag = false;
+            }
+        }catch(Exception e){
+            return false;
+        }
+        return flag;
+    }
 }
