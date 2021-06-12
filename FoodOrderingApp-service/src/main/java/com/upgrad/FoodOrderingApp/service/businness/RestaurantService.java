@@ -6,12 +6,17 @@ import com.upgrad.FoodOrderingApp.service.dao.RestaurantDao;
 import com.upgrad.FoodOrderingApp.service.entity.CategoryEntity;
 import com.upgrad.FoodOrderingApp.service.entity.RestaurantCategoryEntity;
 import com.upgrad.FoodOrderingApp.service.entity.RestaurantEntity;
+import com.upgrad.FoodOrderingApp.service.exception.AuthorizationFailedException;
 import com.upgrad.FoodOrderingApp.service.exception.CategoryNotFoundException;
+import com.upgrad.FoodOrderingApp.service.exception.InvalidRatingException;
 import com.upgrad.FoodOrderingApp.service.exception.RestaurantNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+
 
 import javax.transaction.Transactional;
+import java.text.DecimalFormat;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -74,6 +79,29 @@ public class RestaurantService {
             restaurantEntities.add(rce.getRestaurantId());
         }
         return restaurantEntities;
+    }
+
+    @Transactional
+    public RestaurantEntity updateRestaurantRating(RestaurantEntity restaurantEntity, Double customerRating) throws AuthorizationFailedException, InvalidRatingException, RestaurantNotFoundException {
+        if (!utilityService.isValidCustomerRating(customerRating.toString())) {
+            throw new InvalidRatingException("IRE-001", "Restaurant should be in the range of 1 to 5");
+        }
+        //Finding the new Customer rating and update it.
+        DecimalFormat format = new DecimalFormat("##.0");
+        double restaurantRating = restaurantEntity.getCustomerRating();
+        Integer restaurantNoOfCustomerRated = restaurantEntity.getNumberOfCustomersRated();
+        restaurantEntity.setNumberOfCustomersRated(restaurantNoOfCustomerRated + 1);
+
+        //calculating the new customer rating as per the given data and formula
+        double newCustomerRating = (restaurantRating * (restaurantNoOfCustomerRated.doubleValue()) + customerRating) / restaurantEntity.getNumberOfCustomersRated();
+
+        restaurantEntity.setCustomerRating(Double.parseDouble(format.format(newCustomerRating)));
+
+        //Updating the restautant in the db using the method updateRestaurantRating of restaurantDao.
+        RestaurantEntity updatedRestaurantEntity = restaurantDao.updateRestaurantRating(restaurantEntity);
+
+        return updatedRestaurantEntity;
+
     }
 
 }
