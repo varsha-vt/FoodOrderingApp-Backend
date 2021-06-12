@@ -10,6 +10,7 @@ import com.upgrad.FoodOrderingApp.service.businness.ItemService;
 import com.upgrad.FoodOrderingApp.service.businness.RestaurantService;
 import com.upgrad.FoodOrderingApp.service.entity.CategoryEntity;
 import com.upgrad.FoodOrderingApp.service.entity.RestaurantEntity;
+import com.upgrad.FoodOrderingApp.service.exception.CategoryNotFoundException;
 import com.upgrad.FoodOrderingApp.service.exception.RestaurantNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -70,6 +71,20 @@ public class RestaurantController {
         }
     }
 
+    @CrossOrigin
+    @RequestMapping(method = RequestMethod.GET, path = "/restaurant/category/{category_id}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<RestaurantListResponse> getRestaurantByCategoryId(@PathVariable(value = "category_id") String categoryId) throws CategoryNotFoundException {
+
+        //Calls restaurantByCategory method of restaurantService to get the list of restaurant entity.
+        List<RestaurantEntity> restaurantEntities = restaurantService.restaurantByCategory(categoryId);
+
+        List<RestaurantList> restaurantLists = restaurantList(restaurantEntities);
+
+        //Creating the RestaurantListResponse by adding the list of RestaurantList
+        RestaurantListResponse restaurantListResponse = new RestaurantListResponse().restaurants(restaurantLists);
+        return new ResponseEntity<RestaurantListResponse>(restaurantListResponse, HttpStatus.OK);
+
+    }
 
     public List<RestaurantList> restaurantList(List<RestaurantEntity> restaurantEntities){
         List<RestaurantList> restaurantLists = new LinkedList<>();
