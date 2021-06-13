@@ -37,6 +37,12 @@ public class CategoryService {
         return categoryEntities;
 
     }
+
+    public List<CategoryEntity> getAllCategoriesOrderedByName() {
+        //Calls getAllCategoriesOrderedByName of categoryDao to get list of CategoryEntity
+        List<CategoryEntity> categoryEntities = categoryDao.getAllCategoriesOrderedByName();
+        return categoryEntities;
+    }
 }
 
 
