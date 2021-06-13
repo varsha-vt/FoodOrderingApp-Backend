@@ -42,4 +42,22 @@ public class OrderDao {
         }
     }
 
+    public OrderEntity saveOrder(OrderEntity orderEntity) {
+        try {
+            entityManager.persist(orderEntity);
+            return orderEntity;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public OrderItemEntity saveOrderItem(OrderItemEntity orderedItem) {
+        try {
+            entityManager.persist(orderedItem);
+            return orderedItem;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
 }

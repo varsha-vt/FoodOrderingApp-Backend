@@ -2,13 +2,11 @@ package com.upgrad.FoodOrderingApp.api.controller;
 
 import com.upgrad.FoodOrderingApp.api.model.*;
 import com.upgrad.FoodOrderingApp.service.businness.*;
-import com.upgrad.FoodOrderingApp.service.entity.CouponEntity;
-import com.upgrad.FoodOrderingApp.service.entity.CustomerEntity;
-import com.upgrad.FoodOrderingApp.service.entity.OrderEntity;
-import com.upgrad.FoodOrderingApp.service.entity.OrderItemEntity;
+import com.upgrad.FoodOrderingApp.service.entity.*;
 import com.upgrad.FoodOrderingApp.service.exception.AuthenticationFailedException;
 import com.upgrad.FoodOrderingApp.service.exception.AuthorizationFailedException;
 import com.upgrad.FoodOrderingApp.service.exception.CouponNotFoundException;
+import com.upgrad.FoodOrderingApp.service.exception.PaymentMethodNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -16,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -36,6 +35,8 @@ public class OrderController {
     private ItemService itemService;
     @Autowired
     private UtilityService utilityService;
+    @Autowired
+    private PaymentService paymentService;
 
     @RequestMapping(path = "/order/coupon/{coupon_name}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<CouponDetailsResponse> getCouponByCouponName(@RequestHeader("authorization") final String authorization,  @PathVariable("coupon_name") final String couponName) throws AuthorizationFailedException, CouponNotFoundException {
@@ -156,6 +157,54 @@ public class OrderController {
         } else {
             return new ResponseEntity<CustomerOrderResponse>(new CustomerOrderResponse(), HttpStatus.OK);//If no order created by customer empty array is returned.
         }
+    }
+
+    @RequestMapping(method = RequestMethod.POST, path = "/order", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<SaveOrderResponse> saveOrder(@RequestHeader("authorization") final String authorization,
+                                                       @RequestBody(required = false) final SaveOrderRequest saveOrderRequest) throws Exception {
+        String[] authParts = authorization.split("Bearer ");
+        if(saveOrderRequest.getPaymentId() == null ){
+            throw new PaymentMethodNotFoundException("PNF-002", "No payment method found by this id");
+        }
+        final String accessToken = authParts[1];
+
+        OrderEntity orderEntity = new OrderEntity();
+
+        CustomerEntity customerEntity = customerService.getCustomer(accessToken);
+        CouponEntity couponEntity = orderService.getCouponByCouponId(saveOrderRequest.getCouponId().toString());
+        PaymentEntity paymentEntity = paymentService.getPaymentByUUID(saveOrderRequest.getPaymentId().toString());
+        AddressEntity addressEntity = addressService.getAddressByUUID(saveOrderRequest.getAddressId(), customerEntity);
+        RestaurantEntity restaurantEntity = restaurantService.restaurantByUUID(saveOrderRequest.getRestaurantId().toString());
+
+        orderEntity.setBill(saveOrderRequest.getBill().doubleValue());
+        orderEntity.setUuid(UUID.randomUUID().toString());
+        orderEntity.setDiscount(saveOrderRequest.getDiscount().doubleValue());
+        orderEntity.setCoupon(couponEntity);
+        orderEntity.setCustomer(customerEntity);
+        orderEntity.setDate(new Timestamp(System.currentTimeMillis()));
+        orderEntity.setRestaurant(restaurantEntity);
+        orderEntity.setPayment(paymentEntity);
+        orderEntity.setAddress(addressEntity);
+
+        OrderEntity updatedOrderEntity = orderService.saveOrder(orderEntity);
+
+        List<ItemQuantity> itemQuantities = saveOrderRequest.getItemQuantities();
+        for (ItemQuantity i : itemQuantities) {
+
+            OrderItemEntity orderItemEntity = new OrderItemEntity();
+
+            ItemEntity itemEntity = itemService.getItemByUUID(i.getItemId().toString());
+
+            orderItemEntity.setItemId(itemEntity);
+            orderItemEntity.setOrderId(orderEntity);
+            orderItemEntity.setPrice(i.getPrice());
+            orderItemEntity.setQuantity(i.getQuantity());
+
+            OrderItemEntity savedOrderItem = orderService.saveOrderItem(orderItemEntity);
+        }
+        SaveOrderResponse response = new SaveOrderResponse().id(updatedOrderEntity.getUuid()).status("ORDER SUCCESSFULLY PLACED");
+        return new ResponseEntity<SaveOrderResponse>(response, HttpStatus.CREATED);
     }
 
 
