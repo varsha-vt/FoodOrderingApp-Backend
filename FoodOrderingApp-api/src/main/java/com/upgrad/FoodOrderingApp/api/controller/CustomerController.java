@@ -101,7 +101,7 @@ public class CustomerController {
         String newFirstName = updateCustomerRequest.getFirstName();
         String newLastName = updateCustomerRequest.getLastName();
         //  Check if the firstname entered is empty
-        if (newFirstName == null || newFirstName.isEmpty()) {
+        if (utilityService.isStringEmptyOrNull(newFirstName)) {
             throw new UpdateCustomerException("UCR-002", "First name field should not be empty");
         } else {
             customer.setFirstName(newFirstName);
@@ -136,19 +136,5 @@ public class CustomerController {
         response.setStatus("CUSTOMER PASSWORD UPDATED SUCCESSFULLY");
         return new ResponseEntity<UpdatePasswordResponse>(response, HttpStatus.OK);
     }
-
-//    //Generic method to extract the token without the word Bearer
-//    public String splitAuthorization(String authorization) throws AuthorizationFailedException {
-//        String accessToken = null;
-//        try {
-//            String[] bearerToken = authorization.split(FoodOrderingUtil.BEARER_TOKEN);
-//            if (bearerToken != null && bearerToken.length > 1) {
-//                accessToken = bearerToken[1];
-//            }
-//        } catch (Exception e) {
-//            throw new AuthorizationFailedException("ATH-000", "Bearer incorrect");
-//        }
-//        return accessToken;
-//    }
 
 }
