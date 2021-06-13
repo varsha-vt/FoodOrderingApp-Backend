@@ -16,12 +16,13 @@ public class OrderService {
     @Autowired
     private OrderDao orderDao;
     @Autowired
-    CouponDao couponDao;
+    private CouponDao couponDao;
+    @Autowired
+    private UtilityService utilityService;
 
     @Transactional(propagation = Propagation.REQUIRED)
-    public CouponEntity getCouponByCouponName(final String couponName) throws AuthorizationFailedException,
-            CouponNotFoundException {
-        if (couponName == null || couponName == "" || couponName.isEmpty()) {
+    public CouponEntity getCouponByCouponName(final String couponName) throws AuthorizationFailedException,CouponNotFoundException {
+        if (utilityService.isStringEmptyOrNull(couponName)) {
             throw new CouponNotFoundException("CPF-002", "Coupon name field should not be empty");
         }
         CouponEntity couponEntity = couponDao.getCouponByName(couponName);
