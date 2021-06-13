@@ -45,8 +45,31 @@ public class ItemService {
         return itemEntities;
     }
 
+//    public List<ItemEntity> getItemsByPopularity(RestaurantEntity restaurantEntity) {
+//        return itemDao.getOrdersByRestaurant(restaurantEntity);
+//    }
     public List<ItemEntity> getItemsByPopularity(RestaurantEntity restaurantEntity) {
-        return itemDao.getOrdersByRestaurant(restaurantEntity);
-    }
+        List<ItemEntity> itemEntityList = new ArrayList<ItemEntity>();
+        for (OrderEntity orderEntity : orderDao.getOrdersByRestaurant(restaurantEntity)) {
+            for (OrderItemEntity orderItemEntity : orderItemDao.getItemsByOrder(orderEntity)) {
+                itemEntityList.add(orderItemEntity.getItemId());
+            }
+        }
+
+        Map<String, Integer> map = new HashMap<String, Integer>();
+        for (ItemEntity itemEntity : itemEntityList) {
+            Integer count = map.get(itemEntity.getUuid());
+            map.put(itemEntity.getUuid(), (count == null) ? 1 : count + 1);
+        }
+
+        Map<String, Integer> map1 = new TreeMap<String, Integer>(map);
+        List<ItemEntity> sortedItemEntityList = new ArrayList<ItemEntity>();
+        for (Map.Entry<String, Integer> entry : map1.entrySet()) {
+            sortedItemEntityList.add(itemDao.getItemByUUID(entry.getKey()));
+        }
+        Collections.reverse(sortedItemEntityList);
+
+        return sortedItemEntityList;
+}
 
 }
