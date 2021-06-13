@@ -22,6 +22,7 @@ public class PaymentController {
     @Autowired
     private PaymentService paymentService;
 
+    //Implementation of Get Payment Methods - “/payment” API
     @CrossOrigin
     @RequestMapping(method = RequestMethod.GET, path = "/payment", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<PaymentListResponse> getPaymentMethods() {

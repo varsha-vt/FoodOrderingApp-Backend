@@ -15,14 +15,6 @@ public class ItemDao {
     @PersistenceContext
     private EntityManager entityManager;
 
-    public List<ItemEntity> getOrdersByRestaurant(RestaurantEntity restaurant) {
-        List<ItemEntity> items = entityManager.createNamedQuery("topFivePopularItemsByRestaurant", ItemEntity.class).setParameter(0, restaurant.getId()).getResultList();
-        if (items != null) {
-            return items;
-        }
-        return Collections.emptyList();
-    }
-
     public ItemEntity getItemByUUID(String uuid) {
         try {
             return entityManager.createNamedQuery("getItemsByUuid", ItemEntity.class).setParameter("uuid", uuid).getSingleResult();

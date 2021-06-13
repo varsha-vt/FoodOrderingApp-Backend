@@ -46,9 +46,7 @@ public class ItemService {
         return itemEntities;
     }
 
-    //    public List<ItemEntity> getItemsByPopularity(RestaurantEntity restaurantEntity) {
-//        return itemDao.getOrdersByRestaurant(restaurantEntity);
-//    }
+
     public List<ItemEntity> getItemsByPopularity(RestaurantEntity restaurantEntity) {
         List<ItemEntity> itemEntityList = new ArrayList<ItemEntity>();
         for (OrderEntity orderEntity : orderDao.getOrdersByRestaurant(restaurantEntity)) {

@@ -38,6 +38,7 @@ public class OrderController {
     @Autowired
     private PaymentService paymentService;
 
+    //Implementation of Get Coupon by Coupon Name - “/order/coupon/{coupon_name}” API
     @RequestMapping(path = "/order/coupon/{coupon_name}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<CouponDetailsResponse> getCouponByCouponName(@RequestHeader("authorization") final String authorization,  @PathVariable("coupon_name") final String couponName) throws AuthorizationFailedException, CouponNotFoundException {
 
@@ -53,6 +54,7 @@ public class OrderController {
         return new ResponseEntity<CouponDetailsResponse>(couponDetailsResponse, HttpStatus.OK);
     }
 
+    //Implementation of Get Past Orders of User - “/order” API
     @RequestMapping(method = RequestMethod.GET, path = "/order", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<CustomerOrderResponse> getPastOrdersOfUser(@RequestHeader("authorization") final String authorization) throws AuthenticationFailedException, AuthorizationFailedException {//Access the accessToken from the request Header
 
@@ -66,26 +68,12 @@ public class OrderController {
         List<OrderList> orderLists = new LinkedList<>();
 
         if (ordersEntities != null) {     //Checking if order entities is null if yes them empty list is returned
-            for (OrderEntity ordersEntity : ordersEntities) {      //looping in for every orderentity in orderentities
+            for (OrderEntity ordersEntity : ordersEntities) {
                 //Calls getOrderItemsByOrder by order of orderService get all the items ordered in past by orders.
                 List<OrderItemEntity> orderItemEntities = orderService.getOrderItemsByOrder(ordersEntity);
 
                 //Creating ItemQuantitiesResponse List
                 List<ItemQuantityResponse> itemQuantityResponseList = new LinkedList<>();
-//                orderItemEntities.forEach(orderItemEntity -> {          //Looping for every item in the order to get details of the item ordered
-//                    //Creating new ItemQuantityResponseItem
-//                    ItemQuantityResponseItem itemQuantityResponseItem = new ItemQuantityResponseItem()
-//                            .itemName(orderItemEntity.getItemId().getItemName())
-//                            .itemPrice(orderItemEntity.getItemId().getPrice())
-//                            .id(UUID.fromString(orderItemEntity.getItemId().getUuid()))
-//                            .type(ItemQuantityResponseItem.TypeEnum.valueOf(orderItemEntity.getItemId().getType().getValue()));
-//                    //Creating ItemQuantityResponse which will be added to the list
-//                    ItemQuantityResponse itemQuantityResponse = new ItemQuantityResponse()
-//                            .item(itemQuantityResponseItem)
-//                            .quantity(orderItemEntity.getQuantity())
-//                            .price(orderItemEntity.getPrice());
-//                    itemQuantityResponseList.add(itemQuantityResponse);
-//                });
 
                 //Loop through each item to get details
                 for ( OrderItemEntity orderItemEntity:orderItemEntities ) {
@@ -159,6 +147,7 @@ public class OrderController {
         }
     }
 
+    //Implementation of Save Order - “/order” API
     @RequestMapping(method = RequestMethod.POST, path = "/order", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<SaveOrderResponse> saveOrder(@RequestHeader("authorization") final String authorization,

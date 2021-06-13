@@ -42,14 +42,6 @@ public class AddressService {
         }
     }
 
-//    public StateEntity getStateByUUID(String uuid) throws AddressNotFoundException {
-//        StateEntity state = addressDao.getStateByUuid(uuid);
-//        if (state == null) {
-//            throw new AddressNotFoundException("ANF-002", "No state by this id");
-//        } else {
-//            return state;
-//        }
-//    }
 
     public StateEntity getStateByUUID(String uuid) throws AddressNotFoundException {
         StateEntity state = addressDao.getStateByUuid(uuid);

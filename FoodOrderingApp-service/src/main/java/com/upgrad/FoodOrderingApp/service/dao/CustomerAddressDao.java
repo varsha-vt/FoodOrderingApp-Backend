@@ -11,7 +11,7 @@ public class CustomerAddressDao {
     @PersistenceContext
     private EntityManager entityManager;
 
-    // updates the customer auth entity in the 'customer_auth' table
+    // Updates the customer auth entity in the 'customer_auth' table
     public void createNewCustomerAddressEntry(CustomerAddressEntity customerAddressEntity) {
         this.entityManager.persist(customerAddressEntity);
     }

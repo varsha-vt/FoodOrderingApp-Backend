@@ -24,10 +24,10 @@ public class CategoryController {
     @Autowired
     private CategoryService categoryService;
 
+    //Implementation of Get All Categories - “/category” API
     @CrossOrigin
     @RequestMapping(method = RequestMethod.GET,path = "/category",produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<CategoriesListResponse> getCategories() {
-
         List<CategoryEntity> allCategories = categoryService.getAllCategoriesOrderedByName();
         List<CategoryListResponse> categoryListResponses = null;
         if (allCategories.size() > 0) {
@@ -45,6 +45,7 @@ public class CategoryController {
         return new ResponseEntity<>(categoriesListResponse, HttpStatus.OK);
     }
 
+    //IMplementation of Get Category by Id - “/category/{category_id}” API
     @CrossOrigin
     @RequestMapping(method = RequestMethod.GET, path = "/category/{category_id}",produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<CategoryDetailsResponse> getCategoryDetail(
