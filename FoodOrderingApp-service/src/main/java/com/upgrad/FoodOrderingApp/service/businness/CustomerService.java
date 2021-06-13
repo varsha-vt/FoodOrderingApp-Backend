@@ -9,6 +9,7 @@ import com.upgrad.FoodOrderingApp.service.exception.SignUpRestrictedException;
 import com.upgrad.FoodOrderingApp.service.exception.UpdateCustomerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 
 import javax.transaction.Transactional;
 import java.time.ZonedDateTime;
@@ -98,6 +99,7 @@ public class CustomerService {
     }
 
     //Common method that will be used by all endpoints to validate the accessToken
+    @org.springframework.transaction.annotation.Transactional(propagation = Propagation.REQUIRED)
     public CustomerAuthEntity validateAccessToken(String authtoken) throws AuthorizationFailedException {
         CustomerAuthEntity customerAuthEntity = customerDao.getCustomerAuthToken(authtoken);
         if (customerAuthEntity == null) { // "ATHR-001" to check if authtoken is valid or present in the DB

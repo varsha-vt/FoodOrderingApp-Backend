@@ -2,6 +2,7 @@ package com.upgrad.FoodOrderingApp.service.businness;
 
 import com.upgrad.FoodOrderingApp.service.dao.*;
 import com.upgrad.FoodOrderingApp.service.entity.*;
+import com.upgrad.FoodOrderingApp.service.exception.ItemNotFoundException;
 import com.upgrad.FoodOrderingApp.service.exception.RestaurantNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,7 @@ public class ItemService {
     @Autowired
     private OrderItemDao orderItemDao;
 
-    public List<ItemEntity> getItemsByCategoryAndRestaurant(String restaurantUuid, String categoryUUID){
+    public List<ItemEntity> getItemsByCategoryAndRestaurant(String restaurantUuid, String categoryUUID) {
         RestaurantEntity restaurantEntity = restaurantDao.getRestaurantByUUID(restaurantUuid);
         CategoryEntity categoryEntity = categoryDao.getCategoryByUuid(categoryUUID);
 
@@ -35,9 +36,9 @@ public class ItemService {
         List<CategoryItemEntity> categoryItemEntities = categoryItemDao.getItemsByCategory(categoryEntity);
         List<ItemEntity> itemEntities = new LinkedList<>();
 
-        for (RestaurantItemEntity restaurantItem:restaurantItemEntities ) {
-            for (CategoryItemEntity categoryItem: categoryItemEntities ) {
-                if(restaurantItem.getItemId().equals(categoryItem.getItemId())){
+        for (RestaurantItemEntity restaurantItem : restaurantItemEntities) {
+            for (CategoryItemEntity categoryItem : categoryItemEntities) {
+                if (restaurantItem.getItemId().equals(categoryItem.getItemId())) {
                     itemEntities.add(restaurantItem.getItemId());
                 }
             }
@@ -45,7 +46,7 @@ public class ItemService {
         return itemEntities;
     }
 
-//    public List<ItemEntity> getItemsByPopularity(RestaurantEntity restaurantEntity) {
+    //    public List<ItemEntity> getItemsByPopularity(RestaurantEntity restaurantEntity) {
 //        return itemDao.getOrdersByRestaurant(restaurantEntity);
 //    }
     public List<ItemEntity> getItemsByPopularity(RestaurantEntity restaurantEntity) {
@@ -70,6 +71,14 @@ public class ItemService {
         Collections.reverse(sortedItemEntityList);
 
         return sortedItemEntityList;
-}
+    }
+
+    public ItemEntity getItemByUUID(String itemUuid) throws ItemNotFoundException {
+        ItemEntity itemEntity = itemDao.getItemByUUID(itemUuid);
+        if (itemEntity == null) {
+            throw new ItemNotFoundException("INF-003", "No item by this id exist");
+        }
+        return itemEntity;
+    }
 
 }

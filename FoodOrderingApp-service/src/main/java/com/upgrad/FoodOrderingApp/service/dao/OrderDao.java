@@ -1,5 +1,6 @@
 package com.upgrad.FoodOrderingApp.service.dao;
 
+import com.upgrad.FoodOrderingApp.service.entity.CustomerEntity;
 import com.upgrad.FoodOrderingApp.service.entity.OrderEntity;
 import com.upgrad.FoodOrderingApp.service.entity.OrderItemEntity;
 import com.upgrad.FoodOrderingApp.service.entity.RestaurantEntity;
@@ -28,6 +29,33 @@ public class OrderDao {
         try {
             return entityManager.createNamedQuery("getOrdersByRestaurant", OrderEntity.class).setParameter("restaurant", restaurant).getResultList();
         } catch (NoResultException nre) {
+            return null;
+        }
+    }
+
+    public List<OrderEntity> getOrdersByCustomers(CustomerEntity customerEntity) {
+        try {
+            List<OrderEntity> ordersEntities = entityManager.createNamedQuery("getOrdersByCustomer", OrderEntity.class).setParameter("customer", customerEntity).getResultList();
+            return ordersEntities;
+        } catch (NoResultException nre) {
+            return null;
+        }
+    }
+
+    public OrderEntity saveOrder(OrderEntity orderEntity) {
+        try {
+            entityManager.persist(orderEntity);
+            return orderEntity;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public OrderItemEntity saveOrderItem(OrderItemEntity orderedItem) {
+        try {
+            entityManager.persist(orderedItem);
+            return orderedItem;
+        } catch (Exception e) {
             return null;
         }
     }
