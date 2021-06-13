@@ -23,5 +23,14 @@ public class OrderItemDao {
         }
     }
 
+    public List<OrderItemEntity> getOrderItemsByOrder(OrderEntity orderEntity) {
+        try {
+            List<OrderItemEntity> orderItemEntities = entityManager.createNamedQuery("getOrderItemByOrder", OrderItemEntity.class).setParameter("order", orderEntity).getResultList();
+            return orderItemEntities;
+        } catch (NoResultException nre) {
+            return null;
+        }
+    }
+
 
 }
