@@ -37,7 +37,7 @@ public class AddressController {
     @Autowired
     private CustomerService customerService;
 
-
+    //Implementation of Save Address - “/address” API
     @RequestMapping(method = POST, path = "/address", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<SaveAddressResponse> saveAddress(@RequestHeader("authorization") final String authorization, @RequestBody  SaveAddressRequest saveAddressRequest) throws AuthorizationFailedException, SaveAddressException, AddressNotFoundException {
         //Validate user
@@ -70,12 +70,13 @@ public class AddressController {
 
     }
 
+    //Implementation of Get All Saved Addresses - “/address/customer” API
     @RequestMapping(method = GET, path = "/address/customer" ,produces = MediaType.APPLICATION_JSON_UTF8_VALUE )
     public ResponseEntity<AddressListResponse> getAllAddress(@RequestHeader("authorization") String authorization) throws AuthorizationFailedException {
         //Validate user
         String accessToken = utilityService.splitAuthorization(authorization);
         CustomerEntity customerEntity = customerService.getCustomer(accessToken);
-
+        //Get All Address
         List<AddressEntity> addressList = addressService.getAllAddress(customerEntity);
         AddressListResponse addressListResponse = new AddressListResponse();
         for (AddressEntity address: addressList ) {
@@ -96,6 +97,7 @@ public class AddressController {
     }
 
 
+    //Implementation of Delete Saved Address - “/address/{address_id}” API
     @RequestMapping(method = DELETE, path = "/address/{address_id}" ,produces = MediaType.APPLICATION_JSON_UTF8_VALUE )
     public ResponseEntity<SaveAddressResponse> deleteAddress(@RequestHeader("authorization") String authorization, @PathVariable("address_id") String addressId) throws AuthorizationFailedException, AddressNotFoundException {
         //Validate User
@@ -111,6 +113,7 @@ public class AddressController {
         return new ResponseEntity<SaveAddressResponse>(response,HttpStatus.OK);
     }
 
+    //Implementation of Get All States - “/states” API
     @RequestMapping(path = "/states",method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE )
     public ResponseEntity<StatesListResponse> getAllStates() {
         List<StateEntity> listOfStates = addressService.getAllStates();

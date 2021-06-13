@@ -75,15 +75,13 @@ public class AddressService {
 
     @Transactional
     public void saveCustomerAddress(AddressEntity addressEntity, CustomerEntity customer){
-//        // get customer entity by id
-//        CustomerEntity customer = customerDao.getCustomerEntityById(customerId);
 
-        //create a customer address entity
+        //Create a customer address entity
         CustomerAddressEntity customerAddressEntity = new CustomerAddressEntity();
         customerAddressEntity.setCustomer(customer);
         customerAddressEntity.setAddress(addressEntity);
 
-        // set entry in the customer_address table
+        // Set entry in the customer_address table
         customerAddressDao.createNewCustomerAddressEntry(customerAddressEntity);
     }
 
