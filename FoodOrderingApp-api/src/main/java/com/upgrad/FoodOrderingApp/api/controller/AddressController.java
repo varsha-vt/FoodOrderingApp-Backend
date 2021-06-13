@@ -10,6 +10,7 @@ import com.upgrad.FoodOrderingApp.service.entity.StateEntity;
 import com.upgrad.FoodOrderingApp.service.exception.AddressNotFoundException;
 import com.upgrad.FoodOrderingApp.service.exception.AuthorizationFailedException;
 import com.upgrad.FoodOrderingApp.service.exception.SaveAddressException;
+import org.apache.commons.lang3.Validate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -39,6 +40,7 @@ public class AddressController {
 
     @RequestMapping(method = POST, path = "/address", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<SaveAddressResponse> saveAddress(@RequestHeader("authorization") final String authorization, @RequestBody  SaveAddressRequest saveAddressRequest) throws AuthorizationFailedException, SaveAddressException, AddressNotFoundException {
+        //Validate user
         String accessToken = utilityService.splitAuthorization(authorization);
         CustomerEntity customerEntity = customerService.getCustomer(accessToken);
 
@@ -60,7 +62,7 @@ public class AddressController {
             throw new AddressNotFoundException("ANF-002", "No state by this id");
         }
         AddressEntity createdAddress = addressService.saveAddress(newAddress, state);
-        addressService.saveCustomerAddress(createdAddress,customerEntity.getId());
+        addressService.saveCustomerAddress(createdAddress,customerEntity);
         SaveAddressResponse response =  new SaveAddressResponse();
         response.setId((createdAddress.getUuid()));
         response.setStatus("ADDRESS SUCCESSFULLY REGISTERED");
@@ -70,6 +72,7 @@ public class AddressController {
 
     @RequestMapping(method = GET, path = "/address/customer" ,produces = MediaType.APPLICATION_JSON_UTF8_VALUE )
     public ResponseEntity<AddressListResponse> getAllAddress(@RequestHeader("authorization") String authorization) throws AuthorizationFailedException {
+        //Validate user
         String accessToken = utilityService.splitAuthorization(authorization);
         CustomerEntity customerEntity = customerService.getCustomer(accessToken);
 
@@ -93,12 +96,13 @@ public class AddressController {
     }
 
 
-    @RequestMapping(method = DELETE, path = "/address/customer/{address_id}" ,produces = MediaType.APPLICATION_JSON_UTF8_VALUE )
+    @RequestMapping(method = DELETE, path = "/address/{address_id}" ,produces = MediaType.APPLICATION_JSON_UTF8_VALUE )
     public ResponseEntity<SaveAddressResponse> deleteAddress(@RequestHeader("authorization") String authorization, @PathVariable("address_id") String addressId) throws AuthorizationFailedException, AddressNotFoundException {
+        //Validate User
         String accessToken = utilityService.splitAuthorization(authorization);
         CustomerEntity customerEntity = customerService.getCustomer(accessToken);
-        AddressEntity addressEntity = addressService.getAddressByUUID(addressId, customerEntity);
 
+        AddressEntity addressEntity = addressService.getAddressByUUID(addressId, customerEntity);
         AddressEntity deletedAddress = addressService.deleteAddress(addressEntity);
 
         SaveAddressResponse response = new SaveAddressResponse();
