@@ -67,4 +67,9 @@ public class RestExceptionHandler {
     public ResponseEntity<ErrorResponse> InvalidRatingException(InvalidRatingException exception, WebRequest request) {
         return new ResponseEntity<ErrorResponse>(new ErrorResponse().code(exception.getCode()).message(exception.getErrorMessage()), HttpStatus.NOT_FOUND);
     }
+
+    @ExceptionHandler(CouponNotFoundException.class)
+    public ResponseEntity<ErrorResponse> CouponNotFoundException(CouponNotFoundException exception, WebRequest request) {
+        return new ResponseEntity<ErrorResponse>(new ErrorResponse().code(exception.getCode()).message(exception.getErrorMessage()), HttpStatus.NOT_FOUND);
+    }
 }
