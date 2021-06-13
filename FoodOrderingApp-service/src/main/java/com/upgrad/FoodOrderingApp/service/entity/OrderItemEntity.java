@@ -19,7 +19,7 @@ public class OrderItemEntity implements Serializable {
     @ManyToOne(fetch=FetchType.EAGER)
     @JoinColumn(name="order_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
-    private OrdersEntity orderId;
+    private OrderEntity orderId;
 
 
     @ManyToOne(fetch=FetchType.EAGER)
@@ -42,11 +42,11 @@ public class OrderItemEntity implements Serializable {
         this.id = id;
     }
 
-    public OrdersEntity getOrderId() {
+    public OrderEntity getOrderId() {
         return orderId;
     }
 
-    public void setOrderId(OrdersEntity orderId) {
+    public void setOrderId(OrderEntity orderId) {
         this.orderId = orderId;
     }
 
