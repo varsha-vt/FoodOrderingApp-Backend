@@ -49,7 +49,7 @@ public class AddressControllerTest {
 
     @MockBean
     private CustomerService mockCustomerService;
-/*
+
     // ------------------------------------------ POST /address ------------------------------------------
 
     //This test case passes when the address is successfully saved.
@@ -185,8 +185,7 @@ public class AddressControllerTest {
         verify(mockAddressService, times(1)).getStateByUUID("testUUID");
         verify(mockAddressService, times(1)).saveAddress(any(), any());
     }
-*/
-/*
+
     // ------------------------------------------ DELETE /address/{address_id} ------------------------------------------
 
     //This test case passes when you can successfully delete an address.
@@ -309,9 +308,9 @@ public class AddressControllerTest {
         verify(mockAddressService, times(0)).deleteAddress(any());
     }
 
-*/
+
     // ------------------------------------------ GET /address/customer ------------------------------------------
-/*
+
     //This test case passes when you are able to retrieve all the saved address of a customer.
     @Test
     public void shouldGetAllAddresses() throws Exception {
@@ -402,7 +401,7 @@ public class AddressControllerTest {
         verify(mockCustomerService, times(1)).getCustomer("database_accesstoken1");
         verify(mockAddressService, times(0)).getAllAddress(any());
     }
-*/
+
     // ------------------------------------------ GET /states ------------------------------------------
 
     //This test case passes when you are able to fetch the list of all available states.

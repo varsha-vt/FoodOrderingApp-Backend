@@ -40,9 +40,8 @@ public class CustomerDao {
         }
     }
 
-    // checks to see if a customer entity is there based on a customer id and returns it */
+    // Checks to see if a customer entity exists
     public CustomerEntity getCustomerEntityById(int customerId) {
-        System.out.println(">_ 2. checking to see if user is already existing or not...");
         try {
             return this.entityManager.createNamedQuery("getUserByCustomerId", CustomerEntity.class)
                     .setParameter("id", customerId).getSingleResult();
@@ -51,12 +50,12 @@ public class CustomerDao {
         }
     }
 
-    //update customer_auth table
+    //Update customer_auth table
     public void updateCustomerAuthEntity(CustomerAuthEntity authEntity) {
         entityManager.merge(authEntity);
     }
 
-    //update customer table
+    //Update customer table
     public void updateCustomer(CustomerEntity customer) {
         entityManager.merge(customer);
     }

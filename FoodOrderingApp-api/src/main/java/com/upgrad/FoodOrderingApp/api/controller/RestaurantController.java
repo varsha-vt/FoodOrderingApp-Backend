@@ -17,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import javax.rmi.CORBA.Util;
 import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.List;
@@ -32,15 +31,14 @@ public class RestaurantController {
     private RestaurantService restaurantService;
     @Autowired
     private CategoryService categoryService;
-
     @Autowired
     private CustomerService customerService;
-
     @Autowired
     private ItemService itemService;
     @Autowired
     private UtilityService utilityService;
 
+    //Implementation of Get All Restaurants - "/restaurant" API
     @CrossOrigin
     @RequestMapping(method = RequestMethod.GET, path = "/restaurant", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RestaurantListResponse> getAllRestaurants() {
@@ -53,6 +51,7 @@ public class RestaurantController {
 
     }
 
+    //Implementation of Get Restaurant/s by Name - “/restaurant/name/{reastaurant_name}” API
     @CrossOrigin
     @RequestMapping(method = RequestMethod.GET, path = "/restaurant/name/{restaurant_name}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RestaurantListResponse> getRestaurantByName(@PathVariable(value = "restaurant_name") final String restaurantName) throws RestaurantNotFoundException {
@@ -69,13 +68,13 @@ public class RestaurantController {
         }
     }
 
+    //Implementation of Get Restaurants by Category Id “/restaurant/category/{category_id}” API
     @CrossOrigin
     @RequestMapping(method = RequestMethod.GET, path = "/restaurant/category/{category_id}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RestaurantListResponse> getRestaurantByCategoryId(@PathVariable(value = "category_id") String categoryId) throws CategoryNotFoundException {
 
         //Calls restaurantByCategory method of restaurantService to get the list of restaurant entity.
         List<RestaurantEntity> restaurantEntities = restaurantService.restaurantByCategory(categoryId);
-
         List<RestaurantList> restaurantLists = restaurantList(restaurantEntities);
 
         //Creating the RestaurantListResponse by adding the list of RestaurantList
@@ -83,6 +82,8 @@ public class RestaurantController {
         return new ResponseEntity<RestaurantListResponse>(restaurantListResponse, HttpStatus.OK);
 
     }
+
+    //Implementation of Get Restaurant by Restaurant ID - “/api/restaurant/{restaurant_id}” API
     @CrossOrigin
     @RequestMapping(method = RequestMethod.GET, path = "/api/restaurant/{restaurant_id}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RestaurantDetailsResponse> getRestaurantByRestaurantId(@PathVariable(value = "restaurant_id") final String restaurantUuid) throws RestaurantNotFoundException {
@@ -144,6 +145,7 @@ public class RestaurantController {
     }
 
 
+    //Implementation of Update Restaurant Details- “/api/restaurant/{restaurant_id}” API
     @CrossOrigin
     @RequestMapping(method = RequestMethod.PUT, path = "/api/restaurant/{restaurant_id}", params = "customer_rating", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RestaurantUpdatedResponse> updateRestaurantDetails(@RequestHeader("authorization") final String authorization, @PathVariable(value = "restaurant_id") final String restaurantUuid, @RequestParam(value = "customer_rating") final Double customerRating)
@@ -179,19 +181,7 @@ public class RestaurantController {
             }
 
             RestaurantDetailsResponseAddressState restaurantDetailsResponseAddressState = getRestaurantDetailsResponseAddressState(restaurantEntity);
-//            RestaurantDetailsResponseAddressState restaurantDetailsResponseAddressState = new RestaurantDetailsResponseAddressState();
-//            restaurantDetailsResponseAddressState.id(UUID.fromString(restaurantEntity.getAddress().getStateId().getUuid()));
-//            restaurantDetailsResponseAddressState.stateName(restaurantEntity.getAddress().getStateId().getStateName());
-
             RestaurantDetailsResponseAddress restaurantDetailsResponseAddress = getRestaurantDetailsResponseAddress(restaurantEntity, restaurantDetailsResponseAddressState);
-//            //Creating the RestaurantDetailsResponseAddress for the RestaurantList
-//            RestaurantDetailsResponseAddress restaurantDetailsResponseAddress = new RestaurantDetailsResponseAddress();
-//            restaurantDetailsResponseAddress.id(UUID.fromString(restaurantEntity.getAddress().getUuid()));
-//            restaurantDetailsResponseAddress.city(restaurantEntity.getAddress().getCity());
-//            restaurantDetailsResponseAddress.flatBuildingName(restaurantEntity.getAddress().getFlatBuildingNumber());
-//            restaurantDetailsResponseAddress.locality(restaurantEntity.getAddress().getLocality());
-//            restaurantDetailsResponseAddress.pincode(restaurantEntity.getAddress().getPincode());
-//            restaurantDetailsResponseAddress.state(restaurantDetailsResponseAddressState);
 
             //Creating RestaurantList to add to list of RestaurantList
             RestaurantList restaurantList = new RestaurantList();

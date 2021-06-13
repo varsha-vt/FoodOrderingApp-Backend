@@ -13,7 +13,7 @@ import com.upgrad.FoodOrderingApp.service.exception.SaveAddressException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.swing.plaf.nimbus.State;
+
 import javax.transaction.Transactional;
 import java.util.List;
 
@@ -69,20 +69,19 @@ public class AddressService {
             throw new SaveAddressException("SAR-002","Invalid pincode");
         }
         addressEntity.setStateId(state);
+        addressEntity.setActive(1);
         return  addressDao.saveAddress(addressEntity);
     }
 
     @Transactional
-    public void saveCustomerAddress(AddressEntity addressEntity, int customerId){
-        // get customer entity by id
-        CustomerEntity customer = customerDao.getCustomerEntityById(customerId);
+    public void saveCustomerAddress(AddressEntity addressEntity, CustomerEntity customer){
 
-        //create a customer address entity
+        //Create a customer address entity
         CustomerAddressEntity customerAddressEntity = new CustomerAddressEntity();
         customerAddressEntity.setCustomer(customer);
         customerAddressEntity.setAddress(addressEntity);
 
-        // set entry in the customer_address table
+        // Set entry in the customer_address table
         customerAddressDao.createNewCustomerAddressEntry(customerAddressEntity);
     }
 
@@ -103,7 +102,7 @@ public class AddressService {
             throw new AddressNotFoundException("ANF-003","No address by this id");
         }
         //check if user is authorized to delete
-        CustomerAddressEntity customerAddressEntity = addressDao.getEntityByAddress(addressUUID);
+        CustomerAddressEntity customerAddressEntity = addressDao.getEntityByAddress(dbAddress.getId());
         if(!customerAddressEntity.getCustomer().equals(customerEntity)){
             throw new AuthorizationFailedException("ATHR-004","You are not authorized to view/update/delete any one else's address");
         }

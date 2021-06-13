@@ -10,8 +10,9 @@ import com.upgrad.FoodOrderingApp.service.exception.UpdateCustomerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.transaction.Transactional;
+
 import java.time.ZonedDateTime;
 import java.util.Base64;
 import java.util.UUID;
@@ -26,7 +27,7 @@ public class CustomerService {
     @Autowired
     private PasswordCryptographyProvider cryptoProvider;
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     public CustomerEntity saveCustomer(CustomerEntity customerEntity) throws SignUpRestrictedException {
         //'SGR-005' To validate of there are any empty fields except for lastname
         if (utilityService.isStringEmptyOrNull(customerEntity.getFirstName()) ||
@@ -59,7 +60,7 @@ public class CustomerService {
         }
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     public CustomerAuthEntity authenticate(String username, String password) throws AuthenticationFailedException {
         CustomerEntity customer = customerDao.getUserByContactNumber(username);
         //ATH-001 The below checks if the entered user exists in the data base
@@ -89,7 +90,7 @@ public class CustomerService {
         }
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     public CustomerAuthEntity logout(String authtoken) throws AuthorizationFailedException {
         CustomerAuthEntity customerAuthEntity = validateAccessToken(authtoken);
         customerAuthEntity.setLogoutAt(ZonedDateTime.now());
@@ -99,7 +100,7 @@ public class CustomerService {
     }
 
     //Common method that will be used by all endpoints to validate the accessToken
-    @org.springframework.transaction.annotation.Transactional(propagation = Propagation.REQUIRED)
+    @Transactional(propagation = Propagation.REQUIRED)
     public CustomerAuthEntity validateAccessToken(String authtoken) throws AuthorizationFailedException {
         CustomerAuthEntity customerAuthEntity = customerDao.getCustomerAuthToken(authtoken);
         if (customerAuthEntity == null) { // "ATHR-001" to check if authtoken is valid or present in the DB
@@ -119,19 +120,20 @@ public class CustomerService {
         return customerAuthEntity;
     }
 
+    @Transactional(propagation = Propagation.REQUIRED)
     public CustomerEntity getCustomer(String accessToken) throws AuthorizationFailedException {
         CustomerAuthEntity entity = this.validateAccessToken(accessToken);
         return entity.getCustomer();
     }
 
     //Update the customer name
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     public CustomerEntity updateCustomer(CustomerEntity customer) throws UpdateCustomerException {
         customerDao.updateCustomer(customer);
         return customer;
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     public CustomerEntity updateCustomerPassword(String oldPassword, String newPassword, CustomerEntity customer) throws UpdateCustomerException {
         //Check if new Password is weak
         if (!utilityService.isPasswordValid(newPassword)) {
